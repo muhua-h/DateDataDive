@@ -1,0 +1,314 @@
+---
+title: "Topic Modelling"
+output: html_notebook
+---
+# Objective 
+In this notebook, I will perform topic modelling on the OKCupid dataset. The dataset contains information about users and their responses to questions. I will focus on "About Me" and "What I do on Friday night" columns to extract topics. The implementation is based on the paper "[Structural Topic Models for Open-Ended Survey Responses](https://www.jstor.org/stable/24363543)" by Roberts et al. (2014) and the R package [stm](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf).
+
+# Preprocessing
+First step, load libraries 
+```{r}
+library(tidyverse)
+library(stm)
+```
+
+Second step, load the dataset
+```{r}
+# load the zip file and extract the csv file and save it as df 
+df <- unzip("data.csv.zip", "data.csv") %>% 
+  read_csv()
+
+# mutate a new column called ID which is the row number
+df <- df %>% 
+  mutate(ID = row_number())
+
+# replace the space with underscore in the column names
+names(df) <- str_replace_all(names(df), " ", "_")
+
+# column names to lower case
+names(df) <- tolower(names(df))
+```
+
+# Topic Modelling - About Me
+Now, I will perform topic modelling on the "About Me" column. I will start by preprocessing the text data. 
+
+## Preprocessing
+```{r}
+processed <- textProcessor(df$you_should_message_me_if, metadata = df)
+out <- prepDocuments(processed$documents, processed$vocab, processed$meta)
+docs <- out$documents
+vocab <- out$vocab
+meta  <-out$meta
+```
+```{r}
+plotRemoved(processed$documents, lower.thresh = seq(1, 100, by = 10))
+```
+According to the plot, 20 is an elbow point. I will remove the words that appear less than 20 times. 
+```{r}
+out <- prepDocuments(processed$documents, processed$vocab, processed$meta, lower.thresh = 20)
+docs <- out$documents
+vocab <- out$vocab
+meta  <-out$meta
+```
+
+## Selecting the k 
+```{r}
+storage <- searchK(out$documents, out$vocab, K = c(3: 10), prevalence =~ belief, data = meta)
+```
+
+```{r}
+plot(x = storage$results$semcoh, y =  storage$results$exclus,
+     xlab = "Semantic Coherence", ylab = "Exclusivity")
+text(storage$results$semcoh, storage$results$exclus,labels=storage$results$K, cex= 0.5, pos=3)
+```
+
+There is a trade off between semantic coherence and exclusivity. Given the graph, it seems like that k = 6 and k = 7, are the best choice. 
+
+### Examining k = 5
+```{r message=FALSE}
+prev5<-stm(documents = out$documents, vocab = out$vocab, K = 5, max.em.its = 75, data = out$meta, init.type = "Spectral")
+```
+
+```{r}
+summary(prev5)
+```
+
+```{r}
+# get remaining ID 
+remaining_id <- meta$id
+
+# use remaining_id to subset df by ID
+df_message_me_if <- df %>% 
+  filter(id %in% remaining_id)
+
+# check dimensions
+dim(df_message_me_if)
+```
+
+```{r}
+thought1 <- findThoughts(prev5, texts = df_message_me_if$you_should_message_me_if, topic = 1, n = 1)
+thought2 <- findThoughts(prev5, texts = df_message_me_if$you_should_message_me_if, topic = 2, n = 1)
+thought3 <- findThoughts(prev5, texts = df_message_me_if$you_should_message_me_if, topic = 3, n = 1)
+thought4 <- findThoughts(prev5, texts = df_message_me_if$you_should_message_me_if, topic = 4, n = 1)
+thought5 <- findThoughts(prev5, texts = df_message_me_if$you_should_message_me_if, topic = 5, n = 1)
+
+```
+
+
+```{r}
+thought1
+```
+
+```{r}
+thought2
+```
+
+```{r}
+thought3
+```
+
+```{r}
+thought4
+```
+
+```{r}
+thought5
+```
+
+
+
+
+### Examining k = 6
+```{r}
+prev6<-stm(documents = out$documents, vocab = out$vocab, K = 6, max.em.its = 75, data = out$meta, init.type = "Spectral")
+```
+
+```{r}
+summary(prev6)
+```
+
+```{r}
+# get remaining ID 
+remaining_id <- meta$id
+
+# use remaining_id to subset df by ID
+df_message_me_if <- df %>% 
+  filter(id %in% remaining_id)
+
+# check dimensions
+dim(df_message_me_if)
+```
+
+```{r}
+thought1 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 1, n = 1)
+thought2 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 2, n = 1)
+thought3 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 3, n = 1)
+thought4 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 4, n = 1)
+thought5 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 5, n = 1)
+thought6 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 6, n = 3)
+```
+
+
+```{r}
+thought1
+```
+
+```{r}
+thought2
+```
+
+```{r}
+thought3
+```
+
+```{r}
+thought4
+```
+
+```{r}
+thought5
+```
+
+```{r}
+thought6
+```
+
+### Examining k = 7
+```{r message=FALSE, warning=FALSE}
+prev7<-stm(documents = out$documents, vocab = out$vocab, K = 7, max.em.its = 75, data = out$meta, init.type = "Spectral")
+```
+
+```{r}
+summary(prev7)
+```
+
+```{r}
+# get remaining ID 
+remaining_id <- meta$id
+
+# use remaining_id to subset df by ID
+df_message_me_if <- df %>% 
+  filter(id %in% remaining_id)
+
+# check dimensions
+dim(df_message_me_if)
+```
+
+```{r}
+thought1 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 1, n = 1)
+thought2 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 2, n = 1)
+thought3 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 3, n = 1)
+thought4 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 4, n = 1)
+thought5 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 5, n = 1)
+thought6 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 6, n = 1)
+thought7 <- findThoughts(prev7, texts = df_message_me_if$you_should_message_me_if, topic = 7, n = 1)
+```
+
+
+```{r}
+thought1
+```
+
+```{r}
+thought2
+```
+
+```{r}
+thought3
+```
+
+```{r}
+thought4
+```
+
+```{r}
+thought5
+```
+
+```{r}
+thought6
+```
+
+```{r}
+thought6
+```
+```{r}
+thought7
+```
+
+# Findings 
+The result of a 6 topic model is quite interesting and interpretable. I will preceed wtih k = 6. 
+
+### Examining k = 6
+```{r message=FALSE}
+prev6<-stm(documents = out$documents, vocab = out$vocab, prevalence =~ belief, K = 6, max.em.its = 75, data = out$meta, init.type = "Spectral")
+```
+
+```{r}
+summary(prev6)
+```
+
+```{r}
+# get remaining ID 
+remaining_id <- meta$id
+
+# use remaining_id to subset df by ID
+df_message_me_if <- df %>% 
+  filter(id %in% remaining_id)
+
+# check dimensions
+dim(df_message_me_if)
+```
+
+```{r}
+thought1 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 1, n = 3)
+thought2 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 2, n = 3)
+thought3 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 3, n = 3)
+thought4 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 4, n = 3)
+thought5 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 5, n = 3)
+thought6 <- findThoughts(prev6, texts = df_message_me_if$you_should_message_me_if, topic = 6, n = 3)
+```
+
+
+```{r}
+thought1
+```
+
+```{r}
+thought2
+```
+
+```{r}
+thought3
+```
+
+```{r}
+thought4
+```
+
+```{r}
+thought5
+```
+
+```{r}
+thought6
+```
+```{r}
+prep <- estimateEffect(1:6 ~ belief, prev6, meta = meta, uncertainty = "Global")
+```
+
+```{r}
+summary(prep)
+```
+
+
+
+
+
+
+
+
+
+
+
+
