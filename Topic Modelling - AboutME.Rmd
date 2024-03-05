@@ -53,20 +53,20 @@ meta  <-out$meta
 
 ## Selecting the k 
 ```{r}
-storage <- searchK(out$documents, out$vocab, K = c(3: 10), prevalence =~ belief, data = meta)
+# storage <- searchK(out$documents, out$vocab, K = c(3: 10), prevalence =~ belief, data = meta)
 ```
 
 ```{r}
-plot(x = storage$results$semcoh, y =  storage$results$exclus,
-     xlab = "Semantic Coherence", ylab = "Exclusivity")
-text(storage$results$semcoh, storage$results$exclus,labels=storage$results$K, cex= 0.5, pos=3)
+# plot(x = storage$results$semcoh, y =  storage$results$exclus,
+#      xlab = "Semantic Coherence", ylab = "Exclusivity")
+# text(storage$results$semcoh, storage$results$exclus,labels=storage$results$K, cex= 0.5, pos=3)
 ```
 
 There is a trade off between semantic coherence and exclusivity. Given the graph, it seems like that k = 5 is the best choice. If k = 5 does not yield good results, I will also examine k = 7 and k = 9 as they can be potential candidate too.
 
-### Examining k = 5
+## Examining k = 5
 ```{r}
-prev5<-stm(documents = out$documents, vocab = out$vocab, K = 5, max.em.its = 75, data = out$meta, init.type = "Spectral")
+prev5<-stm(documents = out$documents, vocab = out$vocab, prevalence =~ belief, K = 5, max.em.its = 75, data = out$meta, init.type = "Spectral")
 ```
 
 ```{r}
@@ -86,11 +86,11 @@ dim(df_about_me)
 ```
 
 ```{r}
-thought1 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 1, n = 1)
-thought2 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 2, n = 1)
-thought3 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 3, n = 1)
-thought4 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 4, n = 1)
-thought5 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 5, n = 1)
+thought1 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 1, n = 3)
+thought2 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 2, n = 3)
+thought3 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 3, n = 3)
+thought4 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 4, n = 3)
+thought5 <- findThoughts(prev5, texts = df_about_me$my_self_summary, topic = 5, n = 3)
 ```
 
 ```{r}
@@ -113,6 +113,64 @@ thought4
 thought5
 ```
 
+
+## Examining k = 6
+```{r}
+prev6<-stm(documents = out$documents, vocab = out$vocab, prevalence =~ belief, K = 6, max.em.its = 75, data = out$meta, init.type = "Spectral")
+```
+
+```{r}
+summary(prev6)
+```
+
+```{r}
+# get remaining ID 
+remaining_id <- meta$id
+
+# use remaining_id to subset df by ID
+df_about_me <- df %>% 
+  filter(id %in% remaining_id)
+
+# check dimensions
+dim(df_about_me)
+```
+
+```{r}
+thought1 <- findThoughts(prev6, texts = df_about_me$my_self_summary, topic = 1, n = 3)
+thought2 <- findThoughts(prev6, texts = df_about_me$my_self_summary, topic = 2, n = 3)
+thought3 <- findThoughts(prev6, texts = df_about_me$my_self_summary, topic = 3, n = 3)
+thought4 <- findThoughts(prev6, texts = df_about_me$my_self_summary, topic = 4, n = 3)
+thought5 <- findThoughts(prev6, texts = df_about_me$my_self_summary, topic = 5, n = 1)
+thought6 <- findThoughts(prev6, texts = df_about_me$my_self_summary, topic = 6, n = 3)
+```
+
+```{r}
+thought1
+```
+
+```{r}
+thought2
+```
+
+```{r}
+thought3
+```
+
+```{r}
+thought4
+```
+
+```{r}
+thought5
+```
+
+```{r}
+thought6
+```
+```{r}
+prep <- estimateEffect(1:6 ~ belief, prev6, meta = meta, uncertainty = "Global")
+summary(prep)
+```
 # Findings 
 The result of a 5 topic model is quite interesting. In Topic 1, people talked about their hobbies with a focus on activities. In Topic 2, people talked about their hobbies with a focus on things they like. The first two topics are overlapping to some extent, and they are treated as different topics mostly due to their language use. In Topic 3, people talked about their personality and as well as hobbies. In Topic 4, people provided an overview of their life (past, present, and future). Topic 5 is more diverse which is consisted of people who are not particularly looking for a partner, but just here to make friends in general. 
 
