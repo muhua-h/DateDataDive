@@ -1,3 +1,7 @@
+# Citation
+
+Huang, M., Aidi, & Cui, X. (2024). OkCupid: Explore how region shapes users’ profiles on dating apps. [Unpublished course paper](https://docs.google.com/document/d/121PZ3D_z9caQT6CXlQTeGcWUTX9a-Dl7DIf8T1d9SWs/edit?usp=sharing).
+
 # Research Pitch
 
 ## Research Questions
